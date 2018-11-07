@@ -6,6 +6,7 @@
  */
 
 var fs        = require('fs'),
+    path      = require('path'),
     commander = require('commander');
 var robohydra             = require('robohydra'),
     createRoboHydraServer = robohydra.createRoboHydraServer,
@@ -103,6 +104,7 @@ var robohydra             = require('robohydra'),
     }
 
     var port = commander.port || fileConfig.port || 3000;
+    port = 0;
     server.on('error', function (e) {
         if (e.code === 'EADDRINUSE') {
             console.error("Couldn't listen in port " + port + ", aborting.");
@@ -114,7 +116,13 @@ var robohydra             = require('robohydra'),
         }
         var protocol = fileConfig.secure ? "https" : "http";
         var adminUrl = protocol + "://localhost:" + port + "/robohydra-admin";
+        port = server.address().port;
         console.log("RoboHydra ready on port %d - Admin URL: %s",
                     port, adminUrl);
+        var portFile = path.join(process.cwd(), 'port.txt');
+        var fd = fs.openSync(portFile, 'w');
+        fs.writeSync(fd, port);
+        fs.fsyncSync(fd);
+        fs.closeSync(fd);
     });
 }());
